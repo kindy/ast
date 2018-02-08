@@ -1,0 +1,66 @@
+.app {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+
+  > header {
+    padding: 0 10px;
+    background: #f1f1f1;
+    display: flex;
+    align-items: flex-end;
+    height: 50px;
+    flex: none;
+
+    h1 {
+      margin: 0 .8em 0 0;
+    }
+
+    .ant-tabs-bar {
+      margin-bottom: 0;
+    }
+  }
+
+  > .mainBody {
+    flex: auto;
+    padding: 15px;
+  }
+
+}
+
+
+.flex {
+  display: flex;
+}
+.flexV {
+  display: flex;
+  flex-direction: column;
+}
+
+.flex-auto {
+  flex: auto;
+}
+
+
+.card-container > .ant-tabs-card > .ant-tabs-content {
+  height: 120px;
+  margin-top: -16px;
+}
+
+.card-container > .ant-tabs-card > .ant-tabs-content > .ant-tabs-tabpane {
+  background: #fff;
+  padding: 16px;
+}
+
+.card-container > .ant-tabs-card > .ant-tabs-bar {
+  border-color: #fff;
+}
+
+.card-container > .ant-tabs-card > .ant-tabs-bar .ant-tabs-tab {
+  border-color: transparent;
+  background: transparent;
+}
+
+.card-container > .ant-tabs-card > .ant-tabs-bar .ant-tabs-tab-active {
+  border-color: #fff;
+  background: #fff;
+}
