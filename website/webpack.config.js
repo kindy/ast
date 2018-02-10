@@ -180,6 +180,20 @@ module.exports = {
             options: {
               cacheDirectory: !isProd,
               compact: isProd,
+              babelrc: false,
+              presets: [
+                require.resolve('babel-preset-env'),
+                require.resolve('babel-preset-stage-0'),
+                require.resolve('babel-preset-react'),
+              ],
+              plugins: [
+                require.resolve('babel-plugin-transform-v-jsx'),
+                require.resolve('babel-plugin-transform-decorators-legacy'),
+                [
+                  require.resolve('babel-plugin-transform-runtime'),
+                  {polyfill: false},
+                ],
+              ],
             },
           },
 
@@ -326,6 +340,8 @@ module.exports = {
     net: 'empty',
     tls: 'empty',
     child_process: 'empty',
+    module: 'empty',
+    readline: 'empty',
   },
 
   ...(isProd ? {} : {performance: {

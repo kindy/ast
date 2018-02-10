@@ -13,14 +13,14 @@ css(`
   display: flex;
   align-items: flex-end;
   background: #eee;
-  padding-left: 1em;
+  padding: 0 1em;
 }
 .pane--title h3 {
   margin: 0 .5em 5px 0;
 }
 
 .pane--title .ant-tabs-bar {
-  margin-bottom: 0;
+  margin: 4px 0 0;
 }
 .pane--title .ant-tabs-extra-content {
   line-height: 32px;
@@ -34,6 +34,8 @@ css(`
 }
 .pane--title .ant-tabs-nav .ant-tabs-tab {
   margin-right: 5px;
+  padding-top: 2px;
+  padding-bottom: 4px;
 }
 
 .pane--body {

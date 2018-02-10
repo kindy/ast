@@ -2,8 +2,10 @@ import ReactDOM from 'react-dom';
 import React, {Component as ReactComponent} from 'react';
 import {noop, forEach, isObject, isPlainObject} from 'lodash';
 
+export {BrowserRouter, Router, HashRouter, Route, Link, Redirect} from 'react-router-dom';
 export {default as PropTypes} from 'prop-types';
 
+const {Fragment} = React;
 const {render} = ReactDOM;
 export class Component extends ReactComponent {
   static checkPropCall(ctx) {
@@ -96,4 +98,4 @@ React._extFixClassName = (function() {
 })();
 
 
-export {render, React as default, noop};
+export {render, React as default, noop, Fragment};

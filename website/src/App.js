@@ -1,54 +1,35 @@
 import './App.less';
 
-import React, {Component} from 'c/react';
-import {Tabs} from 'c/ui';
-import Block from './ui/Block';
+import React, {Component, HashRouter, Route, Redirect} from 'c/react';
+import {SvgIcon} from 'c/ui';
+import Play from './p/PlayPage';
 import {load} from 'c/utils';
+import DevTools from 'mobx-react-devtools';
 
-const {TabPane} = Tabs;
 
 class App extends Component {
-  constructor(props) {
-    super(props);
-    this.load = load;
-
-    this.state = {
-      plays: [
-        {
-          blocks: [
-            {
-              id: '#1',
-            },
-            {
-              id: '#2',
-            },
-          ],
-        },
-      ],
-
-      playIdx: 0,
-    };
-  }
+  static load = load;
 
   render() {
-    const {playIdx, plays: {[playIdx]: curPlay}} = this.state;
-
     return (
-      <div v:class="app">
-        <header>
-          <h1>AST Play</h1>
+      <HashRouter>
+        <div v:class="app">
+          <DevTools v:if />
 
-          <Tabs type="card" activeKey={String(this.state.playIdx)}>
-            {this.state.plays.map((play, idx) => <TabPane tab={`Play#${idx + 1}`} key={String(idx)} />)}
-          </Tabs>
-        </header>
+          <Route path="/plays/:id" component={Play} />
 
-        <div v:class="mainBody">
-          <div>
-            {curPlay.blocks.map(bl => <Block data={bl} />)}
-          </div>
+          <Redirect from="*" to="/plays/1" />
+
+          <footer>
+            Built with React,&nbsp;
+            <a href="https://ant.design/docs/react/introduce">Antd</a>, Babel
+            &nbsp;|&nbsp;
+            <a href="https://github.com/kindy/ast"><SvgIcon icon="github" size={14}/></a>
+            &nbsp;|&nbsp;
+            See also <a href="https://astexplorer.net/">AST Explorer</a>
+          </footer>
         </div>
-      </div>
+      </HashRouter>
     );
   }
 }

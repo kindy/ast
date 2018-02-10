@@ -1,4 +1,0 @@
-{
-  "plugins": ["transform-v-jsx"],
-  "presets": ["env","react","stage-0"]
-}
