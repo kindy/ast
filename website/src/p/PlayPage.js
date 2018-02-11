@@ -1,5 +1,6 @@
 import React, {Component, Fragment} from 'c/react';
 import {find} from 'c/utils';
+import {observer} from 'c/mobx';
 import Play from '../ui/Play';
 import store from '../s';
 import {Tabs, SvgIcon, Button, css} from 'c/ui';
@@ -18,6 +19,7 @@ css(`
 
 `);
 
+@observer
 export default class PlayPage extends Component {
   constructor(props) {
     super(props);
