@@ -1,6 +1,6 @@
 import ReactDOM from 'react-dom';
 import React, {Component as ReactComponent} from 'react';
-import {noop, forEach, isObject, isPlainObject} from 'lodash';
+import {noop, forEach, isPlainObject} from 'lodash';
 
 export {BrowserRouter, Router, HashRouter, Route, Link, Redirect} from 'react-router-dom';
 export {default as PropTypes} from 'prop-types';
@@ -50,7 +50,12 @@ export class Component extends ReactComponent {
     this._fillProps();
     return this.defaultProps;
   }
+
+  get store() {
+    return this.props.store;
+  }
 }
+
 React._extFixClassName = (function() {
   // vuejs/vue: platforms/web/util/class.js
   function isDef(v) {
@@ -84,7 +89,7 @@ React._extFixClassName = (function() {
     if (Array.isArray(value)) {
       return stringifyArray(value);
     }
-    if (isObject(value)) {
+    if (isPlainObject(value)) {
       return stringifyObject(value);
     }
     if (typeof value === 'string') {

@@ -1,6 +1,5 @@
 import React, {Component, PropTypes} from 'c/react';
 
-import {load} from 'c/utils';
 import {observer} from 'c/mobx';
 import Block from './Block';
 

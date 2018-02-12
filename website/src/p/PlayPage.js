@@ -1,113 +1,111 @@
+import './PlayPage.less';
+
 import React, {Component, Fragment} from 'c/react';
-import {find} from 'c/utils';
-import {observer} from 'c/mobx';
+import {observer, inject} from 'c/mobx';
 import Play from '../ui/Play';
-import store from '../s';
-import {Tabs, SvgIcon, Button, css} from 'c/ui';
+import {Tabs, Button, Menu, Dropdown, Icon} from 'c/ui';
 const {TabPane} = Tabs;
 
 
-css(`
-.play-toolbar {
-  position: relative;
-  top: -11px;
-  margin: 0 -8px;
-  background: rgba(242, 242, 242, 0.5019607843137255);
-  padding: 3px 8px;
-  text-align: right;
-}
-
-`);
-
-@observer
-export default class PlayPage extends Component {
+export class PlayPage extends Component {
   constructor(props) {
     super(props);
 
-    this.store = store;
-    this.playStore = store.play;
+    this.playStore = this.store.play;
 
     this.state = {
     };
+
+    this.playStore.setPlayId(this.getPlayId(props));
   }
 
   componentDidMount() {
-    this.playStore.addPlay({id: '1'});
+    this.addPlay();
   }
-  componentDidUpdate() {
-    if (this.curPlay && !this.curPlay.blocks.length) {
-      this.addBlock();
-    }
+  componentWillReceiveProps(props) {
+    this.playStore.setPlayId(this.getPlayId(props));
+  }
+
+  addPlay(obj = {}) {
+    this.playStore.addPlay(obj);
   }
 
   get plays() {
-    return this.playStore.plays;
-  }
-  get playId() {
-    return this.props.match.params.id;
+    return this.playStore.plays.values();
   }
   get curPlay() {
-    return find(this.plays, {id: this.playId});
+    return this.playStore.curPlay;
+  }
+
+  getPlayId(props = this.props) {
+    return props.match.params.id;
+  }
+
+  doClickMenu(type) {
+    switch (type) {
+      case 'addSample':
+        this.addSampleBlock();
+        break;
+    }
+  }
+
+  addSampleBlock() {
+    this.curPlay.addSampleBlock();
   }
 
   addBlock() {
-    const input = `<a><b v:if={a} /></a>`.trim();
-    const code = `
-const options = (x = []) => ({
-  ast: true,
-  babelrc: false,
-  plugins: [
-    ...x,
-    'syntax-jsx',
-  ],
-});
-
-export default function({input, block, config, depends: {babel, v}}) {
-  const {ast, code: out} = babel.transform(input, options([v]));
-
-  return {
-    ast,
-    results: {
-      out,
-    },
-  };
-};
-
-export function depends({block, load, config}) {
-  return load([
-    'babel-standalone',
-    'https://bundle.run/babel-plugin-transform-v-jsx',
-  ]).then(([babel, v]) => ({babel, v}));
-};
-
-export const config = {};
-    `.trim();
-    this.curPlay.addBlock({input, code,});
+    this.curPlay.addBlock({});
   }
 
   render() {
-    const {plays, playId, curPlay: play} = this;
+    const {plays, curPlay: play} = this;
+    const playId = this.playStore.activeId;
+
+    const menu = (
+      <Menu onClick={ev => this.doClickMenu(ev.key)}>
+        <Menu.Item key="addSample">+Sample Block</Menu.Item>
+      </Menu>
+    );
 
     return <Fragment>
       <header>
         <h1>AST Play</h1>
 
-        <Tabs type="card" activeKey={playId}>
+        <Tabs type="card" activeKey={playId}
+          tabBarExtraContent={
+            <Button size="small" ghost type="primary"
+              onClick={() => this.addPlay()}>+Play</Button>
+          }
+          onChange={key => this.playStore.setPlayId(key)}
+        >
           {plays.map(play => <TabPane tab={`Play#${play.id}`} key={play.id} />)}
         </Tabs>
+        <span className="flex-auto"></span>
+
+        <div v:class="play-toolbar">
+          <Button.Group>
+            <Button size="small" type="primary"
+              onClick={() => this.addBlock()}>+Block</Button>
+            <Button size="small" type="primary" v:class="drop-btn-arrow"
+              v:wrap={<Dropdown overlay={menu} />}
+            >
+              <Icon type="down"/>
+            </Button>
+          </Button.Group>
+        </div>
       </header>
 
       <div v:class="mainBody">
-        <div v:if={!play}>No Play</div>
+        <div v:if={!play}>
+          <Button >+Play</Button>
+        </div>
 
         <Fragment v:if={play}>
-          <div v:class="play-toolbar">
-            <Button onClick={() => this.addBlock()}>+Block</Button>
-          </div>
-
           <Play play={play} />
         </Fragment>
       </div>
     </Fragment>;
   }
 }
+
+export default inject('store')(observer(PlayPage));

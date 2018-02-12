@@ -57,7 +57,7 @@ export default class Editor extends Component {
       type: PropTypes.object,
     },
     mode: {
-      type: PropTypes.string,
+      type: PropTypes.oneOfType([PropTypes.string, PropTypes.object]),
       default: 'javascript',
     },
     enableFormatting: {

@@ -1,14 +1,15 @@
-import {observable, computed, autorun} from 'c/mobx';
-import remotedev from 'mobx-remotedev';
+import {types, useStrict} from 'c/mobx';
 
-import PlayStore from './PlayStore';
+import {PlayStore} from './PlayStore';
 
+useStrict(true);
 
-class Store {
-  @observable play = new PlayStore();
-}
+let Store = types.model('Store', {
+  play: types.optional(PlayStore, {
+    plays: {},
+  }),
+  // auth: types.optional(types.object, {}),
+  // user: types.optional(types.object, {}),
+});
 
-export const store = new Store();
-
-
-export default remotedev(store);
+export {Store};

@@ -33,7 +33,7 @@ export function compileModule(code, globals = {}) {
   let keys = ['module', 'exports', ...globalNames];
   let values = [module, exports, ...globalNames.map(key => globals[key])];
 
-  new Function(keys.join(), code).apply(exports, values);
+  new Function(keys.join(), code).apply(exports, values); // eslint-disable-line
 
   return module.exports;
 }

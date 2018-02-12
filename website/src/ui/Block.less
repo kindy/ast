@@ -1,0 +1,47 @@
+.block--pane {
+  @hdr-height: 40px;
+
+  min-height: 380px;
+  height: 80vh;
+
+  .pane--title {
+    min-height: @hdr-height;
+
+    .svg-icon {
+      margin-right: 0.3em;
+
+      > svg {
+        width: 1.2em;
+        height: 1.2em;
+      }
+    }
+  }
+
+  .splitpane--content {
+    display: flex;
+    flex-direction: column;
+  }
+  .pane--body {
+    flex: auto;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+  }
+
+  .splitpane--a .pane--title {
+    margin-right: -3px;
+  }
+  .splitpane--b .pane--title {
+    margin-left: -3px;
+  }
+
+  .splitpane:not(.vertical) .splitpane--divider {
+    top: @hdr-height;
+  }
+
+  .loading-dot {
+    position: absolute;
+    left: 30px;
+    top: 30px;
+  }
+}

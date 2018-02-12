@@ -1,0 +1,57 @@
+.splitpane {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+
+  &--divider {
+    background-color: #ddd;
+    z-index: 100;
+
+    &:hover {
+      background-color: #999;
+    }
+  }
+
+  &.vertical &--divider {
+    height: 5px;
+    margin-top: -2.5px;
+
+    &:hover {
+      cursor: row-resize;
+    }
+  }
+  &:not(.vertical) &--divider {
+    width: 5px;
+    margin-left: -2.5px;
+
+    &:hover {
+      cursor: col-resize;
+    }
+  }
+
+  &--all {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    right: 0;
+  }
+
+  &--content {
+    position: absolute;
+    box-sizing: border-box;
+  }
+
+  &.vertical &--content {
+    left: 0;
+    right: 0;
+  }
+  &:not(.vertical) &--content {
+    top: 0;
+    bottom: 0;
+  }
+
+}
+

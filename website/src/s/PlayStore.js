@@ -1,146 +1,254 @@
-import {observable, computed, action, autorun} from 'c/mobx';
+import {types, flow, reaction, action} from 'c/mobx';
 import {transform, compileModule} from 'c/es';
-import {load, isEqual} from 'c/utils';
+import {load, isEqual, pick} from 'c/utils';
 
+const defaultInput = `
+input can be any thing.
+:)
 
-export default class PlayStore {
-  @observable plays = [];
+`.trim();
 
-  constructor() {
-    // autorun(() => console.log(this.report));
-  }
+const defaultCode = `
+/* your parser/transform code */
 
-  @action
-  addPlay(obj) {
-    this.plays.push(Play.get(obj));
-  }
-}
+/* can only run in sync mode
+ */
+export default function({input, depends: {abc}, config}) {
+  return {
+    ast: {abc}, // ast is special, other results should be under \`results\` key
+    results: {
+      input,
+      out: 'output a',
+      abc,
+      moreOutput: 'abc',
+    },
+  };
+};
 
-class Play {
-  static nextId = 1;
+/* accept promise
+ * can use load to load packages from unpkg.com
+ */
+export function depends({load, config}) {
+  return Promise.resolve({abc: "I'm abc from depends"});
+};
 
-  id;
-  @observable blocks = [];
-  @observable nextBlockId = 1;
+export const config = {};
+`.trim();
 
-  constructor({id = String(this.constructor.nextId++), ...props}) {
-    Object.assign(this, props, {id});
-  }
-
-  @action
-  addBlock({id = String(this.nextBlockId++), ...obj}) {
-    obj.id = id;
-    this.blocks.push(Block.get(obj));
-  }
-
-  static get(obj) {
-    if (obj instanceof this) {
-      return obj;
-    }
-
-    return new this(obj);
-  }
-}
-
-class Block {
-  id;
-  runingKey;
-  resultsRunKey;
-  @observable input;
-  @observable code;
-  @observable config;
-  @observable results;
-  @observable runError;
-  @observable runN = 0;
-
-  constructor(props) {
-    Object.assign(this, props);
-  }
-
-  @computed
+export const Block = types.model('Block', {
+  id: types.identifier(),
+  parent: types.maybe(types.reference(types.late(() => Block))),
+  input: types.optional(types.string, defaultInput),
+  code: types.optional(types.string, defaultCode),
+  config: types.optional(types.frozen, {}),
+  results: types.frozen,
+  runError: types.frozen,
+  runs: types.optional(types.map(types.frozen), {}),
+}).views(self => ({
   get codeModule() {
     try {
-      return compileModule(transform(this.code));
-    } catch(ex) {
+      return compileModule(transform(self.code));
+    } catch (ex) {
       return new Error(ex);
     }
-  }
-  @computed
-  get configMeta() {
-    return this.codeModule.config;
-  }
+  },
 
-  @computed
+  get running() {
+    return self.runs.size > 0;
+  },
+  get configMeta() {
+    return self.codeModule.config;
+  },
   get configStr() {
-    return JSON.stringify(this.config);
-  }
-  @computed
+    return JSON.stringify(self.config);
+  },
   get runKey() {
     return {
-      input: this.input,
-      code: this.code,
-      config: this.configStr,
+      input: self.input,
+      code: self.code,
+      config: self.configStr,
     };
-  }
-  isRunKeyValid(runKey) {
-    return isEqual(this.runKey, runKey);
+  },
+})).actions(self => {
+  let runingKey;
+  let resultsRunKey;
+  let _watch;
+
+  function isRunKeyValid(runKey) {
+    return isEqual(self.runKey, runKey);
   }
 
-  watchResults() {
-    return autorun(async () => {
-      let added = false;
+  return {
+    afterCreate() {
+      _watch = reaction(() => pick(self, ['codeModule', 'input', 'config']), (data, reaction) => {
+        console.log('block autorun watchResults');
+        self.watchResults(data, reaction);
+      }, {
+        fireImmediately: true,
+        // delay: 200,
+      });
+    },
+    beforeDestroy() {
+      _watch();
+    },
+
+    watchResults: flow(function* watchResults(data, reaction) {
+      // console.log('block watchResults 001', reaction, _watch, data);
+
+      const id = String(Math.random());
+      let runKey;
+
+      self.runError = null;
+
       try {
-        const {codeModule} = this;
+        const {codeModule, input, config} = self; // XXX: input & config to force depends
         if (codeModule instanceof Error) {
-          this.runError = codeModule;
+          self.runError = codeModule;
           return;
         }
 
-        const runKey = this.runKey;
-
-        const check = () => isEqual(runKey, this.runingKey) || (this.results && isEqual(this.resultsRunKey, runKey));
-        if (check()) {
-          return;
-        }
-
-        this.runN++;
-        added = true;
+        runKey = self.runKey;
         console.log('block run runKey', runKey);
-        this.runingKey = runKey;
-        this.runError = null;
 
+        const check = () => isEqual(runKey, runingKey) ||
+          (self.results && isEqual(resultsRunKey, runKey));
+        if (check()) {
+          console.log('block watchResults 003', runKey, runingKey, resultsRunKey);
+          return;
+        }
+
+        self.runs.set(id, {runKey});
+
+        runingKey = runKey;
+        self.runError = null;
 
         const {default: run, depends: loadDeps} = codeModule;
 
-        const depends = await loadDeps({load, block: this, config: this.config});
-        if (!this.isRunKeyValid(runKey)) {
+        const depends = yield loadDeps(
+          {load, block: self, config: self.config});
+        if (!isRunKeyValid(runKey)) {
+          console.log('block watchResults 004');
           return;
         }
 
-        const {ast, results = {}} = run({input: this.input, block: this, config: this.config, depends});
+        const {ast, results = {}} = run(
+          {input: input, block: self, config: config, depends});
         console.log('block run got', ast, results);
 
-        this.results = {
+        self.results = {
           ...results,
           ast,
         };
-        this.resultsRunKey = runKey;
-      } catch(ex) {
-        this.runError = ex;
+        self.trackAction();
+
+        resultsRunKey = runKey;
+      } catch (ex) {
+        self.trackAction(() => {
+          self.runError = ex;
+        });
+        console.log('block watchResults 005', ex);
       } finally {
-        if (added) {
-          this.runN--;
+        console.log('block watchResults finally');
+
+        self.runs.delete(id);
+        self.trackAction();
+
+        if (runKey === runingKey) {
+          runingKey = null;
         }
-        this.runingKey = null;
+        runKey = null;
       }
-    });
-  }
+    }),
+    trackAction(fake) {
+      if (!fake) {
+        setTimeout(() => self.trackAction(true), 0);
+      }
+    },
 
-  static get(obj) {
-    if (obj instanceof this) {
-      return obj;
-    }
+    doUpdate(props) {
+      Object.assign(self, props);
+    },
+  };
+});
 
-    return new this(obj);
-  }
-}
+export const Play = types.model('Play', {
+  id: types.identifier(),
+  nextBlockId: types.optional(types.number, 1),
+  blocks: types.optional(types.array(Block), []),
+}).actions(self => {
+
+  return {
+    addBlock(obj) {
+      if (!obj.id) {
+        obj.id = String(self.nextBlockId++);
+      }
+
+      self.blocks.push(obj);
+    },
+
+    addSampleBlock() {
+      const input = `<a><b v:if={a} /></a>`.trim();
+      const code = `
+const options = (plugins = []) => ({
+  ast: true,
+  babelrc: false,
+  plugins: [
+    ...x,
+    'syntax-jsx',
+  ],
+});
+
+export default function({input, block, config, depends: {babel, vJsx}}) {
+  const {ast, code: out} = babel.transform(input, options([vJsx]));
+
+  return {
+    ast,
+    results: {
+      out,
+    },
+  };
+};
+
+export function depends({block, load, config}) {
+  return load([
+    'babel-standalone',
+    'https://bundle.run/babel-plugin-transform-v-jsx',
+  ]).then(([babel, vJsx]) => ({babel, vJsx}));
+};
+
+export const config = {};
+    `.trim();
+
+      self.addBlock({input, code,});
+    },
+  };
+});
+
+
+export const PlayStore = types.model('PlayStore', {
+  plays: types.map(Play),
+  opened: types.optional(types.array(Play), []),
+  activeId: types.optional(types.string, ''),
+}).views(self => ({
+  get curPlay() {
+    return self.plays.get(self.activeId);
+  },
+
+})).actions(self => {
+  let nextPlayId = 1;
+
+  return {
+    addPlay(obj) {
+      if (!obj.id) {
+        obj.id = String(nextPlayId++);
+      }
+
+      self.plays.put(obj);
+    },
+
+    setPlayId(id) {
+      self.activeId = id;
+    },
+
+  };
+});

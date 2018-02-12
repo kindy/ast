@@ -1,28 +1,65 @@
 .app {
-  display: flex;
-  flex-direction: column;
-  height: 100vh;
+  @hdr-height: 50px;
+
+  padding: (@hdr-height) 0 10px;
 
   > header {
     padding: 0 10px;
     background: #f1f1f1;
     display: flex;
     align-items: flex-end;
-    height: 50px;
+    height: @hdr-height;
     flex: none;
+    position: fixed;
+    width: 100%;
+    top: 0;
+
+    &:after {
+      content: ' ';
+      display: block;
+      position: absolute;
+      bottom: 0;
+      height: 1px;
+      background: #b1b1b1;
+      z-index: -1;
+      box-shadow: 0 1px 3px #eee;
+      left: -10px;
+      right: -10px;
+    }
 
     h1 {
       margin: 0 .8em 0 0;
     }
 
+    .ant-tabs-extra-content {
+      padding-left: 0.5em;
+    }
     .ant-tabs-bar {
       margin-bottom: 0;
+      border-bottom: 0;
     }
+    .ant-tabs.ant-tabs-card > .ant-tabs-bar .ant-tabs-tab {
+      background: white linear-gradient(to bottom, rgba(228, 228, 228, 0.94), rgb(245, 245, 245));
+      position: relative;
+      bottom: 2px;
+      transition: bottom 0.1s;
+    }
+    .ant-tabs.ant-tabs-card > .ant-tabs-bar .ant-tabs-tab-active {
+      background: white linear-gradient(to bottom, rgba(228, 228, 228, 0.84), rgb(255, 255, 255));
+      bottom: 0;
+    }
+    .ant-tabs.ant-tabs-card > .ant-tabs-bar .ant-tabs-nav-container {
+      height: 39px;
+    }
+  }
+
+  .ant-tabs-extra-content {
+    line-height: initial;
   }
 
   > .mainBody {
     flex: auto;
-    padding: 15px;
+    padding: 10px 34px 10px 10px;
   }
 
   > footer {
@@ -36,6 +73,8 @@
     background: white;
     border-right: 1px solid #eee;
     box-shadow: 1px -1px 3px #eee;
+    font-family: serif;
+    font-size: 12px;
 
     a {
       color: #808c9a;
@@ -80,4 +119,8 @@
 .card-container > .ant-tabs-card > .ant-tabs-bar .ant-tabs-tab-active {
   border-color: #fff;
   background: #fff;
+}
+
+.drop-btn-arrow {
+  padding: 0 5px;
 }

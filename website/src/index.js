@@ -1,7 +1,25 @@
 import React, {render} from 'c/react';
-import './index.css';
+import {Provider, connectReduxDevtools} from 'c/mobx';
+
 import App from './App';
+
+import './index.css';
+import './App.less';
+
 import registerServiceWorker from './registerServiceWorker';
 
-render(<App />, document.getElementById('root'));
+import {Store} from './s';
+
+let store = Store.create({});
+if (true) {
+  connectReduxDevtools(require('remotedev'), store);
+}
+
+render(
+  <Provider store={store}>
+    <App/>
+  </Provider>,
+  document.getElementById('root'),
+);
+
 registerServiceWorker();

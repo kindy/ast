@@ -1,4 +1,6 @@
-import React, {Component, PropTypes} from 'c/react';
+import './Block.less';
+
+import React, {Component, PropTypes, Fragment} from 'c/react';
 import {observer} from 'c/mobx';
 import {forEach} from 'c/utils';
 
@@ -6,10 +8,9 @@ import {
   Editor,
   Pane, SplitPane,
   SvgIcon,
-  Button,
+  Button, Spin,
   Tabs, Icon, Menu, Dropdown,
 } from 'c/ui';
-import {load} from 'c/utils';
 const {TabPane} = Tabs;
 const {SubMenu} = Menu;
 
@@ -30,8 +31,7 @@ const menu = (
 );
 
 
-@observer
-export default class Block extends Component {
+export class Block extends Component {
   static props = {
     block: PropTypes.object,
   };
@@ -45,16 +45,19 @@ export default class Block extends Component {
     };
 
     this.jsonMode = {
-      language: 'javascript',
+      name: 'javascript',
       json: true,
     };
   }
 
   componentDidMount() {
-    this.watchResults(this.props.block);
   }
   componentWillUnmount() {
-    this.clearWatch();
+  }
+  onCodeChange(code) {
+    this.props.block.doUpdate({
+      [this.state.inKey]: code,
+    })
   }
 
   buildJSONViewer(json) {
@@ -63,7 +66,8 @@ export default class Block extends Component {
 
   render() {
     const {block} = this.props;
-    const {[this.state.inKey]: code, results, runError} = block;
+    const {inKey, outKey} = this.state;
+    const {[inKey]: code, results, runError} = block;
 
     let out;
     let outTabs;
@@ -71,16 +75,22 @@ export default class Block extends Component {
       out = <Editor value={String(runError)} readOnly={true} mode={'text'} />;
 
     } else if (!results) {
-      out = 'no result';
+      out = block.running ? '' : 'no result';
 
     } else {
-      switch (this.state.outKey) {
+      switch (outKey) {
         case 'tree':
         case 'json':
           out = this.buildJSONViewer(JSON.stringify(results.ast, null, '  '));
+          if (outKey === 'tree') {
+            out = <Fragment>
+              <div><em>TODO: Render Tree</em></div>
+              {out}
+            </Fragment>;
+          }
           break;
         default:
-          out = <Editor value={String(results[this.state.outKey])} readOnly={true} />;
+          out = <Editor value={String(results[outKey])} readOnly={true} />;
           break;
       }
 
@@ -88,20 +98,20 @@ export default class Block extends Component {
       const {ast, ...others} = results;
       if (ast) {
         // TODO: tree
-        false && tabs.push({
+        tabs.push({
           key: 'tree',
-          tab: <SvgIcon icon="tree" />,
+          tab: 'Tree',
         });
         tabs.push({
           key: 'json',
-          tab: <SvgIcon icon="json" />,
+          tab: 'JSON',
         });
       }
       if (others) {
         forEach(Object.keys(others), key => {
           tabs.push({
             key,
-            tab: <SvgIcon icon="code" />,
+            tab: <Fragment><SvgIcon icon="code" />{key}</Fragment>,
           });
         });
       }
@@ -111,56 +121,55 @@ export default class Block extends Component {
       }
     }
 
-    return <Pane
-      title={<React.Fragment>
-        <h3>{block.id}</h3>
-        <Tabs activeKey={this.state.inKey} size="small"
-          tabBarExtraContent={
-            <Button v:if icon="setting" size="small"
-              v:wrap={<Dropdown overlay={menu} />}
-            ></Button>
-          }
-          onChange={key => this.setState({inKey: key})}
-        >
-          <TabPane tab={<SvgIcon icon="code" />} key="input"/>
-          <TabPane tab={<SvgIcon icon="gearsO" />} key="code"/>
-        </Tabs>
-
-        <span v:class="flex"/>
-
-        <Tabs v:if={outTabs} activeKey={this.state.outKey} size="small" v:class="out-tabs"
-          onChange={key => this.setState({outKey: key})}
-          tabBarExtraContent={
-            <Button v:if icon="setting" size="small"></Button>
-          }
-        >
-          {outTabs.map(x => <TabPane {...x} />)}
-        </Tabs>
-
-        <Icon v:if={block.runN} icon="loading" />
-      </React.Fragment>}
-      v:class="flexV flex-auto"
-    >
+    return <div className="pane block--pane">
       <SplitPane>
-        <Editor
-          value={code}
-          onContentChange={({value}) => this.props.block[this.state.inKey] = value}
-        />
+        <Fragment>
+          <div className="pane--title">
+            <h3>Block#{block.id}</h3>
+            <Tabs activeKey={this.state.inKey} size="small"
+              tabBarExtraContent={
+                <Button v:if icon="setting" size="small"
+                  v:wrap={<Dropdown overlay={menu} />}
+                ></Button>
+              }
+              onChange={key => this.setState({inKey: key})}
+            >
+              <TabPane tab={<Fragment><SvgIcon icon="code" />Input</Fragment>} key="input"/>
+              <TabPane tab={<Fragment><SvgIcon icon="gearsO" />Code</Fragment>} key="code"/>
+            </Tabs>
+            <span v:class="flex"/>
+          </div>
+          <div className="pane--body">
+            <Editor
+              value={code}
+              onContentChange={({value}) => this.onCodeChange(value)}
+            />
+          </div>
+        </Fragment>
 
-        <div>
-          {out}
-        </div>
+        <Fragment>
+          <div className="pane--title">
+            <h3>OUTPUT</h3>
+            <Tabs v:if={outTabs} activeKey={outKey} size="small" v:class="out-tabs"
+              onChange={key => this.setState({outKey: key})}
+              tabBarExtraContent={
+                <Button v:if icon="setting" size="small"></Button>
+              }
+            >
+              {outTabs.map(x => <TabPane {...x} />)}
+            </Tabs>
+            <span v:class="flex"/>
+          </div>
+
+          <div className="pane--body">
+            <div v:class="loading-dot"><Spin spinning={block.running} delay={200} /></div>
+
+            {out}
+          </div>
+        </Fragment>
       </SplitPane>
-    </Pane>;
-  }
-
-  watchResults(block) {
-    this._watch = block.watchResults();
-  }
-  clearWatch() {
-    if (this._watch) {
-      this._watch();
-      this._watch = null;
-    }
+    </div>;
   }
 }
+
+export default observer(Block);
