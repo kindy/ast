@@ -1,4 +1,4 @@
-import {types, useStrict} from 'c/mobx';
+import {types, useStrict} from 'common/mobx';
 
 import {PlayStore} from './PlayStore';
 

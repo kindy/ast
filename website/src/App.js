@@ -1,6 +1,7 @@
-import React, {Component, HashRouter, Route, Redirect} from 'c/react';
-import {SvgIcon} from 'c/ui';
-import Play from './p/PlayPage';
+import React, {Component, HashRouter, Route, Redirect} from 'common/react';
+import {SvgIcon} from 'common/components';
+import {observer} from 'common/mobx';
+import Play from './pages/PlayPage';
 import DevTools from 'mobx-react-devtools';
 
 
@@ -8,7 +9,7 @@ export class App extends Component {
   render() {
     return <HashRouter>
       <div v:class="app">
-        <DevTools />
+        {/*<DevTools />*/}
 
         <Route path="/plays/:id" component={Play}/>
 
@@ -29,4 +30,4 @@ export class App extends Component {
   }
 }
 
-export default App;
+export default observer(App);

@@ -1,9 +1,9 @@
 import './PlayPage.less';
 
-import React, {Component, Fragment} from 'c/react';
-import {observer, inject} from 'c/mobx';
-import Play from '../ui/Play';
-import {Tabs, Button, Menu, Dropdown, Icon} from 'c/ui';
+import React, {Component, Fragment} from 'common/react';
+import {observer, inject} from 'common/mobx';
+import Play from '../components/Play';
+import {Tabs, Button, Menu, Dropdown, Icon} from 'common/components';
 const {TabPane} = Tabs;
 
 
@@ -41,29 +41,21 @@ export class PlayPage extends Component {
     return props.match.params.id;
   }
 
-  doClickMenu(type) {
-    switch (type) {
-      case 'addSample':
-        this.addSampleBlock();
-        break;
-    }
-  }
-
-  addSampleBlock() {
-    this.curPlay.addSampleBlock();
+  doAddSampleBlock(id) {
+    this.curPlay.addSampleBlock(id);
   }
 
   addBlock() {
-    this.curPlay.addBlock({});
+    this.curPlay.addBlock();
   }
 
   render() {
     const {plays, curPlay: play} = this;
-    const playId = this.playStore.activeId;
+    const {activeId, samples} = this.playStore;
 
     const menu = (
-      <Menu onClick={ev => this.doClickMenu(ev.key)}>
-        <Menu.Item key="addSample">+Sample Block</Menu.Item>
+      <Menu onClick={ev => this.doAddSampleBlock(ev.key)}>
+        {samples.map(s => <Menu.Item key={s}>+{s}</Menu.Item>)}
       </Menu>
     );
 
@@ -71,7 +63,7 @@ export class PlayPage extends Component {
       <header>
         <h1>AST Play</h1>
 
-        <Tabs type="card" activeKey={playId}
+        <Tabs type="card" activeKey={activeId}
           tabBarExtraContent={
             <Button size="small" ghost type="primary"
               onClick={() => this.addPlay()}>+Play</Button>

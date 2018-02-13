@@ -1,8 +1,8 @@
 import './Block.less';
 
-import React, {Component, PropTypes, Fragment} from 'c/react';
-import {observer} from 'c/mobx';
-import {forEach} from 'c/utils';
+import React, {Component, PropTypes, Fragment} from 'common/react';
+import {observer} from 'common/mobx';
+import {forEach, safeStringify, yaml} from 'common/utils';
 
 import {
   Editor,
@@ -10,25 +10,9 @@ import {
   SvgIcon,
   Button, Spin,
   Tabs, Icon, Menu, Dropdown,
-} from 'c/ui';
+} from 'common/components';
 const {TabPane} = Tabs;
 const {SubMenu} = Menu;
-
-
-const menu = (
-  <Menu>
-    <Menu.Item>1st menu item</Menu.Item>
-    <Menu.Item>2nd menu item</Menu.Item>
-    <SubMenu title="sub menu">
-      <Menu.Item>3rd menu item</Menu.Item>
-      <Menu.Item>4th menu item</Menu.Item>
-    </SubMenu>
-    <SubMenu title="disabled sub menu" disabled>
-      <Menu.Item>5d menu item</Menu.Item>
-      <Menu.Item>6th menu item</Menu.Item>
-    </SubMenu>
-  </Menu>
-);
 
 
 export class Block extends Component {
@@ -41,12 +25,11 @@ export class Block extends Component {
 
     this.state = {
       inKey: 'input',
-      outKey: 'json', // TODO: tree
+      outKey: 'ast',
     };
 
-    this.jsonMode = {
-      name: 'javascript',
-      json: true,
+    this.astMode = {
+      name: 'yaml',
     };
   }
 
@@ -60,8 +43,29 @@ export class Block extends Component {
     })
   }
 
-  buildJSONViewer(json) {
-    return <Editor value={json} mode={this.jsonMode} readOnly={true} />;
+  renderASTtoYaml(ast) {
+    return yaml.safeDump(ast, {
+      skipInvalid: true,
+      noCompatMode: true,
+      lineWidth: 1000,
+      // noRefs: true,
+    });
+    // remove all &ref_000
+    // .replace(/(^|\n)\s*&ref_\d+\s*($|\n)/g, '$1')
+    // .replace(/((?:^|\n)\s*- )&ref_\d+\s*\n\s*/g, '$1')
+    // ;
+  }
+
+  resetInput() {
+    this.props.block.resetInput();
+  }
+  remove(block) {
+    block.remove();
+  }
+
+  buildASTViewer(ast) {
+    const code = this.renderASTtoYaml(ast);
+    return <Editor value={code} mode={this.astMode} readOnly={true} />;
   }
 
   render() {
@@ -79,15 +83,8 @@ export class Block extends Component {
 
     } else {
       switch (outKey) {
-        case 'tree':
-        case 'json':
-          out = this.buildJSONViewer(JSON.stringify(results.ast, null, '  '));
-          if (outKey === 'tree') {
-            out = <Fragment>
-              <div><em>TODO: Render Tree</em></div>
-              {out}
-            </Fragment>;
-          }
+        case 'ast':
+          out = this.buildASTViewer(results.ast);
           break;
         default:
           out = <Editor value={String(results[outKey])} readOnly={true} />;
@@ -96,17 +93,13 @@ export class Block extends Component {
 
       const tabs = [];
       const {ast, ...others} = results;
-      if (ast) {
-        // TODO: tree
+      if (ast !== undefined) {
         tabs.push({
-          key: 'tree',
-          tab: 'Tree',
-        });
-        tabs.push({
-          key: 'json',
-          tab: 'JSON',
+          key: 'ast',
+          tab: 'AST',
         });
       }
+
       if (others) {
         forEach(Object.keys(others), key => {
           tabs.push({
@@ -125,19 +118,21 @@ export class Block extends Component {
       <SplitPane>
         <Fragment>
           <div className="pane--title">
-            <h3>Block#{block.id}</h3>
-            <Tabs activeKey={this.state.inKey} size="small"
-              tabBarExtraContent={
-                <Button v:if icon="setting" size="small"
-                  v:wrap={<Dropdown overlay={menu} />}
-                ></Button>
-              }
+            <h3>#{block.id} {block.name || 'Block'}</h3>
+            <Tabs activeKey={inKey} size="small"
               onChange={key => this.setState({inKey: key})}
             >
               <TabPane tab={<Fragment><SvgIcon icon="code" />Input</Fragment>} key="input"/>
               <TabPane tab={<Fragment><SvgIcon icon="gearsO" />Code</Fragment>} key="code"/>
             </Tabs>
             <span v:class="flex"/>
+            <div v:class="toolbar">
+              <Button size="small" v:if>x</Button>
+              <Button size="small" v:if={inKey === 'input'}
+                onClick={() => this.resetInput()}
+              >Reset</Button>
+              <Button v:if icon="setting" size="small"></Button>
+            </div>
           </div>
           <div className="pane--body">
             <Editor
@@ -159,6 +154,11 @@ export class Block extends Component {
               {outTabs.map(x => <TabPane {...x} />)}
             </Tabs>
             <span v:class="flex"/>
+            <div v:class="toolbar">
+              <Button size="small"
+                onClick={() => this.remove(block)}
+              >x</Button>
+            </div>
           </div>
 
           <div className="pane--body">

@@ -17,7 +17,6 @@ const WatchMissingNodeModulesPlugin = require('react-dev-utils/WatchMissingNodeM
 
 const paths = require('./config/paths');
 const getClientEnvironment = require('./config/env');
-const {alias} = require('./config/conf');
 
 const publicPath = isProd ? paths.servedPath : '/';
 const shouldUseRelativeAssetPaths = publicPath === './';
@@ -88,7 +87,7 @@ module.exports = {
   devtool,
 
   entry: [
-    require.resolve('./config/polyfills'),
+    !isProd && require.resolve('react-hot-loader/patch'),
     !isProd && require.resolve('react-dev-utils/webpackHotDevClient'),
     paths.appIndexJs,
   ].filter(Boolean),
@@ -132,7 +131,11 @@ module.exports = {
     // `web` extension prefixes have been added for better support
     // for React Native Web.
     extensions: ['.web.js', '.mjs', '.js', '.json', '.web.jsx', '.jsx'],
-    alias,
+    alias: {
+      'react-native': 'react-native-web',
+      'lodash': 'lodash-es',
+      common: paths.resolve('src/common'),
+    },
     plugins: [
       // Prevents users from importing files from outside of src/ (or node_modules/).
       // This often causes confusion because we only process files within src/ with babel.
@@ -193,7 +196,8 @@ module.exports = {
                   require.resolve('babel-plugin-transform-runtime'),
                   {polyfill: false},
                 ],
-              ],
+                !isProd && require.resolve('react-hot-loader/babel'),
+              ].filter(Boolean),
             },
           },
 

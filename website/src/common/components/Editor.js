@@ -4,6 +4,7 @@ import 'codemirror/addon/fold/foldgutter.css';
 import React, {Component, PropTypes, noop} from '../react';
 import CodeMirror from 'codemirror';
 import 'codemirror/mode/javascript/javascript';
+import 'codemirror/mode/yaml/yaml';
 import 'codemirror/keymap/vim';
 import 'codemirror/keymap/sublime';
 import {css} from './base';

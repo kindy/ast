@@ -1,5 +1,5 @@
-import React, {render} from 'c/react';
-import {Provider, connectReduxDevtools} from 'c/mobx';
+import React, {render} from 'common/react';
+import {Provider, connectReduxDevtools} from 'common/mobx';
 
 import App from './App';
 
@@ -8,18 +8,46 @@ import './App.less';
 
 import registerServiceWorker from './registerServiceWorker';
 
-import {Store} from './s';
+import {Store} from './store';
 
 let store = Store.create({});
-if (true) {
-  connectReduxDevtools(require('remotedev'), store);
+if (process.env.NODE_ENV !== 'production') {
+  // TODO: wait mobxjs/mobx-state-tree#506
+  // connectReduxDevtools(require('remotedev'), store);
 }
 
-render(
-  <Provider store={store}>
-    <App/>
-  </Provider>,
-  document.getElementById('root'),
-);
+const renderApp = process.env.NODE_ENV !== 'production' ?
+  function(App, store) {
+    const {AppContainer} = require('react-hot-loader');
+    render(
+      <AppContainer>
+        <Provider store={store}>
+          <App/>
+        </Provider>
+      </AppContainer>
+      ,
+      document.getElementById('root'),
+    );
+  } : function(App, store) {
+    render(
+      <Provider store={store}>
+        <App/>
+      </Provider>,
+      document.getElementById('root'),
+    );
+  };
+
+renderApp(App, store);
 
 registerServiceWorker();
+
+if (process.env.NODE_ENV !== 'production' && module.hot) {
+  // module.hot.accept(["./models/todos"], () => {
+  //   // Store definition changed, recreate a new one from old state
+  //   renderApp(App, createTodoStore(getSnapshot(store)))
+  // })
+
+  module.hot.accept(['./App'], () => {
+    renderApp(require('./App').default, store)
+  });
+}
