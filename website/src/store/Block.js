@@ -1,5 +1,5 @@
 import {action, flow, reaction, types, destroy, getParent} from 'common/mobx';
-import {compileModule, transformCode, babelEnv} from 'common/es';
+import {compileModule, transformCode, babelEnv, prettier} from 'common/es';
 import {isEqual, load, pick} from 'common/utils';
 
 const defaultCode = require('!raw-loader!./data/defaultCode.js'); // eslint-disable-line
@@ -47,6 +47,7 @@ export const Block = types.model('Block', {
   // {load, babel,}
   const context = Object.freeze({
     babel: Object.freeze(babelEnv),
+    prettier,
     load,
   });
 
@@ -91,8 +92,6 @@ export const Block = types.model('Block', {
       const id = String(Math.random());
       let runKey;
 
-      self.runError = null;
-
       try {
         const {codeModule, input, config} = self; // XXX: input & config to force depends
         if (codeModule instanceof Error) {
@@ -114,7 +113,6 @@ export const Block = types.model('Block', {
         self.runs.set(id, {runKey});
 
         runingKey = runKey;
-        self.runError = null;
 
         const {depends: loadDeps, default: run} = codeModule;
 
@@ -142,13 +140,13 @@ export const Block = types.model('Block', {
           ...results,
           ast,
         };
+        self.runError = null;
         self.trackAction();
 
         resultsRunKey = runKey;
       } catch (ex) {
-        self.trackAction(() => {
-          self.runError = ex;
-        });
+        self.runError = ex;
+        self.trackAction();
         console.log('block watchResults 005', ex);
       } finally {
         console.log('block watchResults finally');

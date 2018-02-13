@@ -4,6 +4,7 @@ import 'codemirror/addon/fold/foldgutter.css';
 import React, {Component, PropTypes, noop} from '../react';
 import CodeMirror from 'codemirror';
 import 'codemirror/mode/javascript/javascript';
+import 'codemirror/mode/jsx/jsx';
 import 'codemirror/mode/yaml/yaml';
 import 'codemirror/keymap/vim';
 import 'codemirror/keymap/sublime';
@@ -59,7 +60,7 @@ export default class Editor extends Component {
     },
     mode: {
       type: PropTypes.oneOfType([PropTypes.string, PropTypes.object]),
-      default: 'javascript',
+      default: 'jsx',
     },
     enableFormatting: {
       type: PropTypes.bool,

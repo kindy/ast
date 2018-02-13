@@ -4,6 +4,7 @@ import stage0 from 'babel-preset-stage-0';
 import react from 'babel-preset-react';
 import decorators from 'babel-plugin-transform-decorators-legacy';
 import flowStripTypes from 'babel-plugin-transform-flow-strip-types';
+export {default as prettier} from 'prettier';
 
 const options = {
   presets: [
