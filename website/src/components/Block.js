@@ -2,7 +2,7 @@ import './Block.less';
 
 import React, {Component, PropTypes, Fragment} from 'common/react';
 import {observer} from 'common/mobx';
-import {forEach, safeStringify, yaml} from 'common/utils';
+import {forEach, safeStringify, yaml, omit, isPlainObject} from 'common/utils';
 
 import {
   Editor,
@@ -44,16 +44,22 @@ export class Block extends Component {
   }
 
   renderASTtoYaml(ast) {
-    return yaml.safeDump(ast, {
+    const safeAst = JSON.parse(safeStringify(ast));
+    const filtedAst = JSON.parse(JSON.stringify(safeAst, (key, val) => {
+      if (isPlainObject(val)) {
+        return omit(val, ['range', 'loc', 'start', 'end', 'parent', 'tokens']);
+      }
+
+      return val;
+    }));
+
+
+    return yaml.safeDump(filtedAst, {
       skipInvalid: true,
       noCompatMode: true,
       lineWidth: 1000,
-      // noRefs: true,
+      noRefs: true,
     });
-    // remove all &ref_000
-    // .replace(/(^|\n)\s*&ref_\d+\s*($|\n)/g, '$1')
-    // .replace(/((?:^|\n)\s*- )&ref_\d+\s*\n\s*/g, '$1')
-    // ;
   }
 
   resetInput() {
@@ -65,7 +71,7 @@ export class Block extends Component {
 
   buildASTViewer(ast) {
     const code = this.renderASTtoYaml(ast);
-    return <Editor value={code} mode={this.astMode} readOnly={true} />;
+    return <Editor value={code} mode={this.astMode} foldGutter={true} readOnly={true} />;
   }
 
   render() {

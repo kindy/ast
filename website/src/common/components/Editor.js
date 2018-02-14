@@ -1,34 +1,34 @@
 import 'codemirror/lib/codemirror.css';
 import 'codemirror/addon/fold/foldgutter.css';
+import './Editor.less';
 
 import React, {Component, PropTypes, noop} from '../react';
+import {observable} from '../mobx';
+import {forEach} from '../utils';
+
 import CodeMirror from 'codemirror';
+
+import 'codemirror/addon/fold/foldcode';
+import 'codemirror/addon/fold/foldgutter';
+import 'codemirror/addon/fold/indent-fold';
+
 import 'codemirror/addon/dialog/dialog.css';
 import 'codemirror/addon/dialog/dialog';
 import 'codemirror/addon/search/searchcursor';
 import 'codemirror/addon/search/search';
+
 import 'codemirror/mode/javascript/javascript';
 import 'codemirror/mode/jsx/jsx';
 import 'codemirror/mode/yaml/yaml';
+
 import 'codemirror/keymap/vim';
 import 'codemirror/keymap/sublime';
-import {css} from './base';
 
-
-css(`
-.editor {
-  box-shadow: 0 0 2px 0 #ddd;
-  margin-right: 3px; 
-  height: 300px;
-  display: flex;
-  flex-direction: column;
-  flex: auto;
-}
-.editor .CodeMirror {
-  flex: auto;
-}
-
-`);
+// hack yaml to support fold by indent
+CodeMirror.modes.yaml = (
+  origModeF => (...args) =>
+    Object.assign(origModeF(...args), {fold: 'indent'})
+)(CodeMirror.modes.yaml);
 
 export default class Editor extends Component {
   static props = {
@@ -45,6 +45,10 @@ export default class Editor extends Component {
       default: true,
     },
     readOnly: {
+      type: PropTypes.bool,
+      default: false,
+    },
+    foldGutter: {
       type: PropTypes.bool,
       default: false,
     },
@@ -66,35 +70,51 @@ export default class Editor extends Component {
       type: PropTypes.oneOfType([PropTypes.string, PropTypes.object]),
       default: 'jsx',
     },
-    enableFormatting: {
-      type: PropTypes.bool,
-    },
     keyMap: {
       type: PropTypes.string,
       default: 'sublime',
     },
   };
 
+  static editorProps = [
+    'keyMap',
+    // 'value',
+    'mode',
+    'lineNumbers',
+    'readOnly',
+    'foldGutter',
+  ];
+
   constructor(props) {
     super(props);
     this.state = {
-      value: props.value,
     };
+
+    this.value = props.value;
+  }
+
+  getGutters(prop) {
+    return ['lineNumbers', 'foldGutter']
+      .map(k => ([k, prop[k]]))
+      .filter(([k, on]) => Boolean(on))
+      .map(([k]) => `CodeMirror-${k.toLowerCase()}`);
   }
 
   componentWillReceiveProps(nextProps) {
-    if (nextProps.value !== this.state.value) {
-      this.setState(
-        {value: nextProps.value},
-        () => this.codeMirror.setValue(nextProps.value),
-      );
-    }
-    if (nextProps.mode !== this.props.mode) {
-      this.codeMirror.setOption('mode', nextProps.mode);
+    if (nextProps.value !== this.value) {
+      this.value = nextProps.value;
+      this.codeMirror.setValue(nextProps.value);
     }
 
-    if (nextProps.keyMap !== this.props.keyMap) {
-      this.codeMirror.setOption('keyMap', nextProps.keyMap);
+    let changed = false;
+    this.constructor.editorProps.forEach(p => {
+      if (nextProps[p] !== this.props[p]) {
+        this.codeMirror.setOption(p, nextProps[p]);
+        changed = true;
+      }
+    });
+    if (changed) {
+      this.codeMirror.setOption('gutters', this.getGutters(nextProps));
     }
 
     this._setError(nextProps.error);
@@ -141,17 +161,16 @@ export default class Editor extends Component {
     this.codeMirror = CodeMirror( // eslint-disable-line new-cap
       this.container,
       {
+        value: this.props.value,
+
         keyMap: this.props.keyMap,
-        value: this.state.value,
         mode: this.props.mode,
         lineNumbers: this.props.lineNumbers,
         readOnly: this.props.readOnly,
+        foldGutter: this.props.foldGutter,
+        gutters: this.getGutters(this.props),
       },
     );
-
-    this._bindCMHandler('blur', instance => {
-      if (!this.props.enableFormatting) return;
-    });
 
     this._bindCMHandler('changes', () => {
       clearTimeout(this._updateTimer);
@@ -200,10 +219,9 @@ export default class Editor extends Component {
       value: doc.getValue(),
       cursor: doc.indexFromPos(doc.getCursor()),
     };
-    this.setState(
-      {value: args.value},
-      () => this.props.onContentChange(args),
-    );
+
+    this.value = args.value;
+    this.props.onContentChange(args);
   }
 
   _onActivity() {

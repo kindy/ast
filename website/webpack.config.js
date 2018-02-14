@@ -177,8 +177,8 @@ module.exports = {
           // Process JS with Babel.
           {
             test: /\.(?:js|jsx|mjs)$/,
-            include: paths.appSrc,
             loader: require.resolve('babel-loader'),
+            include: [paths.appSrc, paths.resolve('node_modules/prettier/')],
             options: {
               cacheDirectory: !isProd,
               compact: isProd,
