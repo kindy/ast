@@ -6,7 +6,7 @@ import App from './App';
 import './index.css';
 import './App.less';
 
-import registerServiceWorker from './registerServiceWorker';
+// import registerServiceWorker from './registerServiceWorker';
 
 import {Store} from './store';
 
@@ -39,7 +39,7 @@ const renderApp = process.env.NODE_ENV !== 'production' ?
 
 renderApp(App, store);
 
-registerServiceWorker();
+// registerServiceWorker();
 
 if (process.env.NODE_ENV !== 'production' && module.hot) {
   // module.hot.accept(["./models/todos"], () => {
