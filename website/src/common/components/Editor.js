@@ -3,6 +3,10 @@ import 'codemirror/addon/fold/foldgutter.css';
 
 import React, {Component, PropTypes, noop} from '../react';
 import CodeMirror from 'codemirror';
+import 'codemirror/addon/dialog/dialog.css';
+import 'codemirror/addon/dialog/dialog';
+import 'codemirror/addon/search/searchcursor';
+import 'codemirror/addon/search/search';
 import 'codemirror/mode/javascript/javascript';
 import 'codemirror/mode/jsx/jsx';
 import 'codemirror/mode/yaml/yaml';
@@ -67,7 +71,7 @@ export default class Editor extends Component {
     },
     keyMap: {
       type: PropTypes.string,
-      default: 'default',
+      default: 'sublime',
     },
   };
 
