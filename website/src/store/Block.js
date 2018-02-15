@@ -1,5 +1,5 @@
 import {action, flow, reaction, types, destroy, getParent} from 'common/mobx';
-import {compileModule, transformCode, babelEnv, prettier} from 'common/es';
+import {compileModule, transformCode, babelEnv, getPrettier} from 'common/es';
 import {isEqual, load, pick} from 'common/utils';
 
 const defaultCode = require('!raw-loader!./data/defaultCode.js'); // eslint-disable-line
@@ -47,7 +47,7 @@ export const Block = types.model('Block', {
   // {load, babel,}
   const context = Object.freeze({
     babel: Object.freeze(babelEnv),
-    prettier,
+    getPrettier,
     load,
   });
 

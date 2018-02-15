@@ -21,7 +21,7 @@ import 'codemirror/mode/javascript/javascript';
 import 'codemirror/mode/jsx/jsx';
 import 'codemirror/mode/yaml/yaml';
 
-import 'codemirror/keymap/vim';
+// import 'codemirror/keymap/vim'; // it's too big
 import 'codemirror/keymap/sublime';
 
 // hack yaml to support fold by indent

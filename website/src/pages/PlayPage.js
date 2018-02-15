@@ -2,6 +2,7 @@ import './PlayPage.less';
 
 import React, {Component, Fragment} from 'common/react';
 import {observer, inject} from 'common/mobx';
+import {ga} from 'common/utils';
 import Play from '../components/Play';
 import {Tabs, Button, Menu, Dropdown, Icon} from 'common/components';
 const {TabPane} = Tabs;
@@ -54,7 +55,7 @@ export class PlayPage extends Component {
     const {activeId, samples} = this.playStore;
 
     const menu = (
-      <Menu onClick={ev => this.doAddSampleBlock(ev.key)}>
+      <Menu onClick={ev => (ga('send', 'event', 'play', 'addBlock', `sample: ${ev.key}`), this.doAddSampleBlock(ev.key))}>
         {samples.map(s => <Menu.Item key={s}>+{s}</Menu.Item>)}
       </Menu>
     );
@@ -66,9 +67,9 @@ export class PlayPage extends Component {
         <Tabs type="card" activeKey={activeId}
           tabBarExtraContent={
             <Button size="small" ghost type="primary"
-              onClick={() => this.addPlay()}>+Play</Button>
+              onClick={() => (ga('send', 'event', 'playPage', 'addPlay'), this.addPlay())}>+Play</Button>
           }
-          onChange={key => this.playStore.setPlayId(key)}
+          onChange={key => (ga('send', 'event', 'playPage', 'goPlay', key), this.playStore.setPlayId(key))}
         >
           {plays.map(play => <TabPane tab={`Play#${play.id}`} key={play.id} />)}
         </Tabs>
@@ -77,7 +78,7 @@ export class PlayPage extends Component {
         <div v:class="play-toolbar">
           <Button.Group>
             <Button size="small" type="primary"
-              onClick={() => this.addBlock()}>+Block</Button>
+              onClick={() => (ga('send', 'event', 'playPage', 'addBlock', 'default'), this.addBlock())}>+Block</Button>
             <Button size="small" type="primary" v:class="drop-btn-arrow"
               v:wrap={<Dropdown overlay={menu} />}
             >

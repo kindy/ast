@@ -1,5 +1,6 @@
 import React, {render} from 'common/react';
 import {Provider, connectReduxDevtools} from 'common/mobx';
+import {installGtm} from 'common/utils';
 
 import App from './App';
 
@@ -40,6 +41,8 @@ const renderApp = process.env.NODE_ENV !== 'production' ?
 renderApp(App, store);
 
 // registerServiceWorker();
+
+installGtm('GTM-MZRXG43');
 
 if (process.env.NODE_ENV !== 'production' && module.hot) {
   // module.hot.accept(["./models/todos"], () => {

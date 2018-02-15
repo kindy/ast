@@ -13,6 +13,7 @@ const eslintFormatter = require('react-dev-utils/eslintFormatter');
 const ModuleScopePlugin = require('react-dev-utils/ModuleScopePlugin');
 const CaseSensitivePathsPlugin = require('case-sensitive-paths-webpack-plugin');
 const WatchMissingNodeModulesPlugin = require('react-dev-utils/WatchMissingNodeModulesPlugin');
+const BundleAnalyzerPlugin = require('webpack-bundle-analyzer').BundleAnalyzerPlugin;
 
 const paths = require('./config/paths');
 const getClientEnvironment = require('./config/env');
@@ -134,6 +135,7 @@ module.exports = {
       'react-native': 'react-native-web',
       'lodash': 'lodash-es',
       common: paths.resolve('src/common'),
+      'lodash.get$': 'lodash-es/get',
     },
     plugins: [
       // Prevents users from importing files from outside of src/ (or node_modules/).
@@ -183,8 +185,39 @@ module.exports = {
               cacheDirectory: !isProd,
               compact: isProd,
               babelrc: false,
+              /*
+                presets: [
+    // Latest stable ECMAScript features
+    [
+      'env',
+      {
+        targets: {
+          ie: 11,
+          // We currently minify with uglify
+          // Remove after https://github.com/mishoo/UglifyJS2/issues/448
+          uglify: true,
+        },
+        // Disable polyfill transforms
+        useBuiltIns: false,
+        modules: false,
+      },
+    ],
+    // JSX, Flow
+    'react',
+  ],
+
+              */
               presets: [
-                require.resolve('babel-preset-env'),
+                [
+                  require.resolve('babel-preset-env'),
+                  /*{
+                    targets: {
+                      ie: 11,
+                    },
+                    useBuiltIns: false,
+                    modules: false,
+                  },*/
+                ],
                 require.resolve('babel-preset-stage-0'),
                 require.resolve('babel-preset-react'),
               ],
@@ -328,7 +361,9 @@ module.exports = {
     // https://github.com/jmblog/how-to-optimize-momentjs-with-webpack
     // You can remove this if you don't use Moment.js:
     new webpack.IgnorePlugin(/^\.\/locale$/, /moment$/),
-  ].filter(Boolean),
+
+    !isProd && new BundleAnalyzerPlugin(),
+].filter(Boolean),
   // Some libraries import Node modules but don't use them in the browser.
   // Tell Webpack to provide empty mocks for them so importing them works.
   node: {

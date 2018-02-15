@@ -4,7 +4,6 @@ import stage0 from 'babel-preset-stage-0';
 import react from 'babel-preset-react';
 import decorators from 'babel-plugin-transform-decorators-legacy';
 import flowStripTypes from 'babel-plugin-transform-flow-strip-types';
-export {default as prettier} from 'prettier';
 
 const options = {
   presets: [
@@ -46,4 +45,13 @@ export function compileModule(code, globals = {}) {
   new Function(keys.join(), code).apply(exports, values); // eslint-disable-line
 
   return module.exports;
+}
+
+let prettierP = null;
+export function getPrettier() {
+  if (!prettierP) {
+    prettierP = import(/* webpackChunkName: 'prettier' */ 'prettier').then(x => (x.default || x));
+  }
+
+  return prettierP;
 }

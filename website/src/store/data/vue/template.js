@@ -4,10 +4,11 @@ export const defaultInput = `
 <a><b v-if="a" /></a>
 `.trim();
 
-export function depends({context: {load, prettier}, config}) {
-  return load([
-    'vue-template-compiler',
-  ]).then(([vtc]) => ({vtc, prettier}));
+export function depends({context: {load, getPrettier}, config}) {
+  return Promise.all([
+    load('vue-template-compiler'),
+    getPrettier(),
+  ]).then(([vtc, prettier]) => ({vtc, prettier}));
 }
 
 export default function run({input, config, depends: {vtc, prettier}}) {
@@ -23,3 +24,4 @@ export default function run({input, config, depends: {vtc, prettier}}) {
     },
   };
 };
+

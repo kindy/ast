@@ -1,6 +1,10 @@
+echo:
+	echo hi
 
-site:
-	yarn build && \
+build:
+	yarn build
+
+site: build
 		cp CNAME build/ && \
 		cd build && \
 		git init && \

@@ -2,7 +2,7 @@ import './Block.less';
 
 import React, {Component, PropTypes, Fragment} from 'common/react';
 import {observer} from 'common/mobx';
-import {forEach, safeStringify, yaml, omit, isPlainObject} from 'common/utils';
+import {forEach, safeStringify, yaml, omit, isPlainObject, ga} from 'common/utils';
 
 import {
   Editor,
@@ -162,7 +162,7 @@ export class Block extends Component {
             <span v:class="flex"/>
             <div v:class="toolbar">
               <Button size="small"
-                onClick={() => this.remove(block)}
+                onClick={() => (ga('send', 'event', 'play', 'removeBlock', block.id), this.remove(block))}
               >x</Button>
             </div>
           </div>
